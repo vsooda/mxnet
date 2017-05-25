@@ -140,26 +140,28 @@ int main(int argc, char const *argv[]) {
   int max_epoch = 100;
   float learning_rate = 1e-4;
   float weight_decay = 1e-4;
+  const Context ctx = Context::cpu();
 
   auto resnet = ResNetSymbol(10);
   std::map<std::string, NDArray> args_map;
   std::map<std::string, NDArray> aux_map;
 
-  args_map["data"] = NDArray(Shape(batch_size, 3, 256, 256), Context::gpu());
-  args_map["data_label"] = NDArray(Shape(batch_size), Context::gpu());
-  resnet.InferArgsMap(Context::gpu(), &args_map, args_map);
+  args_map["data"] = NDArray(Shape(batch_size, 3, 256, 256), ctx);
+  args_map["data_label"] = NDArray(Shape(batch_size), ctx);
+  resnet.InferArgsMap(ctx, &args_map, args_map);
+  auto *exec = resnet.SimpleBind(ctx, args_map);
 
   auto train_iter = MXDataIter("ImageRecordIter")
-      .SetParam("path_imglist", "./sf1_train.lst")
-      .SetParam("path_imgrec", "./sf1_train.rec")
+      .SetParam("path_imglist", "/home/sooda/data/mxnet_data/train.lst")
+      .SetParam("path_imgrec", "/home/sooda/data/mxnet_data/train.rec")
       .SetParam("data_shape", Shape(3, 256, 256))
       .SetParam("batch_size", batch_size)
       .SetParam("shuffle", 1)
       .CreateDataIter();
 
   auto val_iter = MXDataIter("ImageRecordIter")
-      .SetParam("path_imglist", "./sf1_val.lst")
-      .SetParam("path_imgrec", "./sf1_val.rec")
+      .SetParam("path_imglist", "/home/sooda/data/mxnet_data/val.lst")
+      .SetParam("path_imgrec", "/home/sooda/data/mxnet_data/val.rec")
       .SetParam("data_shape", Shape(3, 256, 256))
       .SetParam("batch_size", batch_size)
       .CreateDataIter();
@@ -169,7 +171,6 @@ int main(int argc, char const *argv[]) {
      ->SetParam("rescale_grad", 1.0 / batch_size)
      ->SetParam("clip_gradient", 10);
 
-  auto *exec = resnet.SimpleBind(Context::gpu(), args_map);
 
   for (int iter = 0; iter < max_epoch; ++iter) {
     LG << "Epoch: " << iter;

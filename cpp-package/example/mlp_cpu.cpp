@@ -39,14 +39,14 @@ int main(int argc, char** argv) {
   const float weight_decay = 1e-2;
 
   auto train_iter = MXDataIter("MNISTIter")
-      .SetParam("image", "./mnist_data/train-images-idx3-ubyte")
-      .SetParam("label", "./mnist_data/train-labels-idx1-ubyte")
+      .SetParam("image", "./data/mnist/train-images-idx3-ubyte")
+      .SetParam("label", "./data/mnist/train-labels-idx1-ubyte")
       .SetParam("batch_size", batch_size)
       .SetParam("flat", 1)
       .CreateDataIter();
   auto val_iter = MXDataIter("MNISTIter")
-      .SetParam("image", "./mnist_data/t10k-images-idx3-ubyte")
-      .SetParam("label", "./mnist_data/t10k-labels-idx1-ubyte")
+      .SetParam("image", "./data/mnist/t10k-images-idx3-ubyte")
+      .SetParam("label", "./data/mnist/t10k-labels-idx1-ubyte")
       .SetParam("batch_size", batch_size)
       .SetParam("flat", 1)
       .CreateDataIter();
