@@ -51,26 +51,63 @@ class BufferFile {
 
 int main(int argc, char* argv[]) {
 
-    // Models path for your model, you have to modify it
-    std::string json_file = "roll.json";
-    std::string param_file = "hh-0200.params";
-    //std::string json_file = "ocr-symbol.json";
-    //std::string param_file = "ocr-0006.params";
+    //python symbol
+    //std::string json_file = "roll_group.json";
+    //std::string param_file = "hh-0200.params";
+
+    //cpp symbol
+    std::string json_file = "predict.json";
+    std::string param_file = "mini-180.params";
 
     BufferFile json_data(json_file);
     BufferFile param_data(param_file);
 
     int batch_size = 1;
     int seq_len = 1;
+    const int num_lstm_layer = 3;
+    const int num_hidden = 512;
+    const int state_shape_size = 2;
+
+
+
+    const int add_input_num = num_lstm_layer * 2;
+    const int add_shape_size = add_input_num * state_shape_size;
 
     // Parameters
     int dev_type = 1;  // 1: cpu, 2: gpu
     int dev_id = 0;  // arbitrary.
-    const mx_uint num_input_nodes = 2;
-    const char* input_key[2] = {"data", "softmax_label"};
+    const mx_uint num_input_nodes = 8;
+    const char* input_key[8] = {"data", "softmax_label",
+                                "l0_init_c", "l0_init_h",
+                                "l1_init_c", "l1_init_h",
+                                "l2_init_c", "l2_init_h"};
+    mx_uint  input_shape_indptr[3 + add_shape_size] = {0, 2, 4};
+    mx_uint input_shape_data[4 + add_shape_size] = {batch_size, seq_len, batch_size, seq_len};
+
+    int shape_ind_start_index = 3;
+    int shape_data_start_index = 4;
+    int name_start_index = 2;
+
+    for (int i = 0; i < num_lstm_layer; i++) {
+        std::string key = "l" + std::to_string(i) + "_init_";
+        std::string key_c = key + "c";
+        std::cout << key_c << std::endl;
+        input_shape_indptr[shape_ind_start_index] = input_shape_indptr[shape_ind_start_index-1] + state_shape_size;
+        shape_ind_start_index++;
+        input_shape_data[shape_data_start_index++] = batch_size;
+        input_shape_data[shape_data_start_index++] = num_hidden;
+        //input_key[name_start_index++] = key_c.c_str();
+
+        std::string key_h = key + "h";
+        input_shape_indptr[shape_ind_start_index] = input_shape_indptr[shape_ind_start_index-1] + state_shape_size;
+        shape_ind_start_index++;
+        input_shape_data[shape_data_start_index++] = batch_size;
+        input_shape_data[shape_data_start_index++] = num_hidden;
+        //input_key[name_start_index++] = key_h.c_str();
+    }
+
     const char** input_keys = input_key;
-    const mx_uint  input_shape_indptr[3] = {0, 2, 4};
-    const mx_uint input_shape_data[4] = {batch_size, seq_len, batch_size, seq_len};
+
 //    const mx_uint num_input_nodes = 13;  // 1 for feedforward
 //    const char* input_key[num_input_nodes] = {"data", "embed_weight",
 //                                "lstm_l0_h2h_bias", "lstm_l0_h2h_weight",
