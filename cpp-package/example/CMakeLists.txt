@@ -3,9 +3,8 @@ if(NOT MSVC)
 endif()
 
 set(CPP_EXAMPLE_LIBS
-  ${BEGIN_WHOLE_ARCHIVE} mxnet_static ${END_WHOLE_ARCHIVE}
-  ${BEGIN_WHOLE_ARCHIVE} dmlc ${END_WHOLE_ARCHIVE}
-  ${mxnet_LINKER_LIBS}
+        mxnet
+        ${OpenCV_LIBS}
   )
 
 set(CPP_PACKAGE_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/../include/mxnet-cpp/)
@@ -39,7 +38,7 @@ add_dependencies(alexnet ${CPPEX_DEPS})
 
 add_executable(charRNN charRNN.cpp ${CPP_PACKAGE_HEADERS})
 target_link_libraries(charRNN ${CPP_EXAMPLE_LIBS})
-add_dependencies(charRNN ${CPPEX_DEPS})
+#add_dependencies(charRNN ${CPPEX_DEPS})
 
 add_executable(googlenet googlenet.cpp ${CPP_PACKAGE_HEADERS})
 target_link_libraries(googlenet ${CPP_EXAMPLE_LIBS})
@@ -64,3 +63,7 @@ add_dependencies(mlp_gpu ${CPPEX_DEPS})
 add_executable(resnet resnet.cpp ${CPP_PACKAGE_HEADERS})
 target_link_libraries(resnet ${CPP_EXAMPLE_LIBS})
 add_dependencies(resnet ${CPPEX_DEPS})
+
+
+add_executable(rnn_predict rnn_predict.cpp ${CPP_PACKAGE_HEADERS})
+target_link_libraries(rnn_predict ${CPP_EXAMPLE_LIBS})
