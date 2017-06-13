@@ -4,6 +4,8 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <unordered_map>
+#include <tuple>
 
 #include <opencv2/opencv.hpp>
 
@@ -49,6 +51,27 @@ class BufferFile {
     }
 };
 
+
+static std::tuple<std::unordered_map<wchar_t, mx_float>, std::vector<wchar_t>> loadCharIndices(
+        const std::string file) {
+    std::wifstream ifs(file, std::ios::binary);
+    std::unordered_map<wchar_t, mx_float> map;
+    std::vector<wchar_t> chars;
+    if (ifs) {
+        std::wostringstream os;
+        os << ifs.rdbuf();
+        int n = 1;
+        map[L'\0'] = 0;
+        chars.push_back(L'\0');
+        for (auto c : os.str()) {
+            map[c] = (mx_float) n++;
+            chars.push_back(c);
+        }
+    }
+    // Note: Can't use {} because this would hit the explicit constructor
+    return std::tuple<std::unordered_map<wchar_t, mx_float>, std::vector<wchar_t>>(map, chars);
+}
+
 int main(int argc, char* argv[]) {
 
     //python symbol
@@ -81,6 +104,7 @@ int main(int argc, char* argv[]) {
                                 "l0_init_c", "l0_init_h",
                                 "l1_init_c", "l1_init_h",
                                 "l2_init_c", "l2_init_h"};
+
     mx_uint  input_shape_indptr[3 + add_shape_size] = {0, 2, 4};
     mx_uint input_shape_data[4 + add_shape_size] = {batch_size, seq_len, batch_size, seq_len};
 
@@ -88,41 +112,36 @@ int main(int argc, char* argv[]) {
     int shape_data_start_index = 4;
     int name_start_index = 2;
 
+//    std::vector<std::string> input_names;
+//    input_names.push_back("data");
+//    input_names.push_back("softmax_label");
+
     for (int i = 0; i < num_lstm_layer; i++) {
         std::string key = "l" + std::to_string(i) + "_init_";
         std::string key_c = key + "c";
-        std::cout << key_c << std::endl;
         input_shape_indptr[shape_ind_start_index] = input_shape_indptr[shape_ind_start_index-1] + state_shape_size;
         shape_ind_start_index++;
         input_shape_data[shape_data_start_index++] = batch_size;
         input_shape_data[shape_data_start_index++] = num_hidden;
         //input_key[name_start_index++] = key_c.c_str();
+        //input_names.push_back(key_c);
 
         std::string key_h = key + "h";
         input_shape_indptr[shape_ind_start_index] = input_shape_indptr[shape_ind_start_index-1] + state_shape_size;
         shape_ind_start_index++;
         input_shape_data[shape_data_start_index++] = batch_size;
         input_shape_data[shape_data_start_index++] = num_hidden;
+        //input_names.push_back(key_h);
         //input_key[name_start_index++] = key_h.c_str();
     }
 
-    const char** input_keys = input_key;
+//    const char* input_key[num_input_nodes];
+//    for (int i = 0; i < num_input_nodes; i++) {
+//        input_key[i] = input_names[i].c_str();
+//        std::cout << input_key[i] << std::endl;
+//    }
 
-//    const mx_uint num_input_nodes = 13;  // 1 for feedforward
-//    const char* input_key[num_input_nodes] = {"data", "embed_weight",
-//                                "lstm_l0_h2h_bias", "lstm_l0_h2h_weight",
-//                                "lstm_l0_i2h_bias", "lstm_l0_i2h_weight",
-//                                "lstm_l1_h2h_bias", "lstm_l1_h2h_weight",
-//                                "lstm_l1_i2h_bias", "lstm_l1_i2h_weight",
-//                                "pred_bias", "pred_weight", "label"};
-//
-//    const char** input_keys = input_key;
-//
-//    const mx_uint input_shape_indptr[num_input_nodes+1] = { 0, 2, 4, 6, 7, 9, 10, 12, 13, 15, 16, 17, 19, 21};
-//    const mx_uint input_shape_data[21] = { 1, 10, 8713, 15,
-//                                          60, 15, 60, 60, 15, 60,
-//                                            60, 15, 60, 60, 15, 60,
-//                                            8713, 8713, 15, 1, 10};
+    const char** input_keys = input_key;
 
     PredictorHandle pred_hnd = 0;
 
@@ -145,15 +164,30 @@ int main(int argc, char* argv[]) {
     assert(pred_hnd);
 
 
+    std::string dictionary_file = "mini.dictionary";
+    auto dicts = loadCharIndices(dictionary_file);
+    auto dictionary = std::get<0>(dicts);
+    auto charIndices = std::get<1>(dicts);
+    std::wstring text;
 
     bool seq_forward = true;
     if (seq_forward) {
         int start = 1;
-        int seq_len = 10;
-        int start_index = 1;
+        int seq_len = 100;
+        int start_index = 66;
         int * presult = new int[seq_len];
         int softmax_dim = 0;
         MXPredSequnceForward(pred_hnd, seq_len, presult, softmax_dim, start_index);
+        //output the result
+        for (int i = 0; i < seq_len; i++) {
+            int index = presult[i];
+            if (index == 0) {
+                break;
+            }
+            wchar_t c = charIndices[index];
+            text.push_back(charIndices[index]);
+        }
+        std::wcout << text << std::endl;
     } else {
         std::vector<mx_float> input_data(seq_len);
         for (int i = 0; i < seq_len; i++) {
