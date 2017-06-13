@@ -203,6 +203,9 @@ MXNET_DLL int MXNDListGet(NDListHandle handle,
  */
 MXNET_DLL int MXNDListFree(NDListHandle handle);
 
+int MXPredSequnceForward(PredictorHandle handle, int seq_len,
+                         int* result, int softmax_dim, int start_index);
+
 #ifdef __cplusplus
 }
 #endif  // __cplusplus

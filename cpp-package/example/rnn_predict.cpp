@@ -144,31 +144,43 @@ int main(int argc, char* argv[]) {
                  &pred_hnd);
     assert(pred_hnd);
 
-    std::vector<mx_float> input_data(seq_len);
 
-    for (int i = 0; i < seq_len; i++) {
-        input_data[i] = 1;
+
+    bool seq_forward = true;
+    if (seq_forward) {
+        int start = 1;
+        int seq_len = 10;
+        int start_index = 1;
+        int * presult = new int[seq_len];
+        int softmax_dim = 0;
+        MXPredSequnceForward(pred_hnd, seq_len, presult, softmax_dim, start_index);
+    } else {
+        std::vector<mx_float> input_data(seq_len);
+        for (int i = 0; i < seq_len; i++) {
+            input_data[i] = 1;
+        }
+        MXPredSetInput(pred_hnd, "data", input_data.data(), batch_size*seq_len);
+        MXPredForward(pred_hnd);
+        mx_uint output_index = 0;
+
+        mx_uint *shape = 0;
+        mx_uint shape_len;
+
+        MXPredGetOutputShape(pred_hnd, output_index, &shape, &shape_len);
+
+        size_t size = 1;
+        for (mx_uint i = 0; i < shape_len; ++i) size *= shape[i];
+
+        std::cout << size << std::endl;
+
+        std::vector<float> data(size);
+
+        MXPredGetOutput(pred_hnd, output_index, &(data[0]), size);
     }
 
-    MXPredSetInput(pred_hnd, "data", input_data.data(), batch_size*seq_len);
 
-    MXPredForward(pred_hnd);
 
-    mx_uint output_index = 0;
 
-    mx_uint *shape = 0;
-    mx_uint shape_len;
-
-    MXPredGetOutputShape(pred_hnd, output_index, &shape, &shape_len);
-
-    size_t size = 1;
-    for (mx_uint i = 0; i < shape_len; ++i) size *= shape[i];
-
-    std::cout << size << std::endl;
-
-    std::vector<float> data(size);
-
-    MXPredGetOutput(pred_hnd, output_index, &(data[0]), size);
 
     // Release Predictor
     MXPredFree(pred_hnd);

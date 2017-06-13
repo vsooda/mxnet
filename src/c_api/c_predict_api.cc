@@ -262,6 +262,41 @@ int MXPredForward(PredictorHandle handle) {
   API_END();
 }
 
+int MXPredSequnceForward(PredictorHandle handle, int seq_len, int* presult, int softmax_dim, int start_index) {
+  MXAPIPredictor* p = static_cast<MXAPIPredictor*>(handle);
+  API_BEGIN();
+  mx_float predict_index = (mx_float)start_index;
+  for (int i = 0; i < seq_len; i++) {
+    p->arg_arrays[p->key2arg["data"]].SyncCopyFromCPU(&predict_index, 1);
+    p->exec->Forward(false);
+    const TShape& s = p->out_shapes[0];
+    p->out_shapes_buffer.resize(s.ndim());
+    nnvm::ShapeTypeCast(s.begin(), s.end(), p->out_shapes_buffer.data());
+    if (softmax_dim == 0) {
+      softmax_dim = 1;
+      for (int j = 0; j < p->out_shapes_buffer.size(); j++) {
+        softmax_dim = softmax_dim * p->out_shapes_buffer[j];
+      }
+    }
+    std::vector<mx_float> softmax;
+    softmax.resize(softmax_dim);
+    p->out_arrays[0].SyncCopyToCPU(softmax.data(), softmax_dim);
+    int n = max_element(softmax.begin(), softmax.end()) - softmax.begin();
+    std::cout << i << " " << n << std::endl;
+    presult[i] = n;
+    predict_index = (mx_float)n;
+    int num_lstm_layer = 3;
+    //一个map保存output到input_init_state的映射
+    for (int l = 0; l < num_lstm_layer; l++) {
+      std::string key = "l" + std::to_string(l) + "_init_";
+      CopyFromTo(p->out_arrays[l * 2 + 1], &p->arg_arrays[p->key2arg[key + "c"]]);
+      CopyFromTo(p->out_arrays[l * 2 + 2], &p->arg_arrays[p->key2arg[key + "h"]]);
+      //p->out_arrays[l * 2 + 1].CopyTo(p->arg_arrays[p->key2arg[key + "c"]]);
+      //p->out_arrays[l * 2 + 2].CopyTo(p->arg_arrays[p->key2arg[key + "h"]]);
+    }
+  }
+  API_END();
+}
 int MXPredPartialForward(PredictorHandle handle, int step, int* step_left) {
   MXAPIPredictor* p = static_cast<MXAPIPredictor*>(handle);
   API_BEGIN();
