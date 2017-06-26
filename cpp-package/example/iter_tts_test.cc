@@ -13,9 +13,11 @@ int main() {
   int batch_size = 32;
   std::string data_scp = "/home/sooda/speech/merlin/egs/world/s1/experiments/nana/duration_model/gen_data/lab.scp";
   std::string label_scp =  "/home/sooda/speech/merlin/egs/world/s1/experiments/nana/duration_model/gen_data/cmp.scp";
+  std::string data_dir = "/home/sooda/speech/merlin/egs/world/s1/experiments/nana/duration_model/gen_data/nn_no_silence_lab_norm_546/";
+  std::string label_dir = "/home/sooda/speech/merlin/egs/world/s1/experiments/nana/duration_model/gen_data/nn_norm_dur_5/";
   auto train_iter = MXDataIter("TTSIter")
-      .SetParam("data_scp", data_scp)
-      .SetParam("label_scp", label_scp)
+      .SetParam("data_scp", data_dir)
+      .SetParam("label_scp", label_dir)
       .SetParam("data_shape", Shape(546))
       .SetParam("label_shape", Shape(5))
       .SetParam("batch_size", batch_size)
