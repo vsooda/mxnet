@@ -11,17 +11,17 @@ using namespace mxnet::cpp;
 
 int main() {
   int batch_size = 32;
-  std::string data_scp = "/home/sooda/speech/merlin/egs/world/s1/experiments/nana/duration_model/gen_data/lab.scp";
-  std::string label_scp =  "/home/sooda/speech/merlin/egs/world/s1/experiments/nana/duration_model/gen_data/cmp.scp";
-  std::string data_dir = "/home/sooda/speech/merlin/egs/world/s1/experiments/nana/duration_model/gen_data/nn_no_silence_lab_norm_546/";
-  std::string label_dir = "/home/sooda/speech/merlin/egs/world/s1/experiments/nana/duration_model/gen_data/nn_norm_dur_5/";
+  std::string data_scp = "/home/sooda/speech/merlin/egs/world/s1/experiments/nana/acoustic_model/gen_data/lab.scp";
+  std::string label_scp =  "/home/sooda/speech/merlin/egs/world/s1/experiments/nana/acoustic_model/gen_data/cmp.scp";
+  std::string data_dir = "/home/sooda/speech/merlin/egs/world/s1/experiments/nana/acoustic_model/gen_data/nn_no_silence_lab_norm_555/";
+  std::string label_dir = "/home/sooda/speech/merlin/egs/world/s1/experiments/nana/acoustic_model/gen_data/nn_norm_mgc_lf0_vuv_bap_199/";
   auto train_iter = MXDataIter("TTSIter")
-      .SetParam("data_scp", data_dir)
-      .SetParam("label_scp", label_dir)
-      .SetParam("data_shape", Shape(546))
-      .SetParam("label_shape", Shape(5))
+      .SetParam("data_scp", data_scp)
+      .SetParam("label_scp", label_scp)
+      .SetParam("data_shape", Shape(555))
+      .SetParam("label_shape", Shape(199))
       .SetParam("batch_size", batch_size)
-      .SetParam("round_batch", false)
+      .SetParam("round_batch", true)
       .CreateDataIter();
   train_iter.Reset(); //这个beforefirst的消息可能比下面next晚到达
   int index = 0;
@@ -32,14 +32,21 @@ int main() {
     std::vector<mx_uint> label_shapes = data_batch.label.GetShape();
     std::vector<mx_uint> data_shapes = data_batch.data.GetShape();
     for (int i = 0; i < label_shapes[0]; i++) {
-      for (int j = 0; j < label_shapes[1]; j++) {
+      for (int j = 0; j < 5; j++) {
         std::cout << label[i*label_shapes[1] + j] << " ";
       }
       std::cout << " --- ";
-      for (int j = 0; j < label_shapes[1]; j++) {
+      for (int j = data_shapes[1]-5; j < data_shapes[1]; j++) {
         std::cout << data[i*data_shapes[1] + j] << " ";
       }
       std::cout << std::endl;
+      if (i < label_shapes[0] -1) {
+        float current = label[i * label_shapes[1]];
+        float next = label[(i+1)*label_shapes[1]];
+        if (fabs(current + 2.43743) < 1e-5 && fabs(next + 1.28068) < 1e-5) {
+          std::cout << "done......................................." << std::endl;
+        }
+      }
     }
     std::cout << "============================iter: " << index++ << std::endl;
   }

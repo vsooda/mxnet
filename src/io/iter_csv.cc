@@ -76,7 +76,7 @@ class CSVIter: public IIterator<DataInst> {
         end_ = true; return false;
       }
       data_ptr_ = 0;
-      data_size_ = data_parser_->Value().size;
+      data_size_ = data_parser_->Value().size; //rowBlock的size..
     }
     out_.index = inst_counter_++;
     CHECK_LT(data_ptr_, data_size_);

@@ -96,6 +96,7 @@ class PrefetcherIter : public IIterator<DataBatch> {
 
   virtual bool Next(void) {
     if (out_ != nullptr) {
+      //recycle_queue_用于内存释放,数据暂存在此，等待一起释放
       recycle_queue_.push(out_); out_ = nullptr;
     }
     // do recycle

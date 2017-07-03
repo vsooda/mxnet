@@ -47,6 +47,7 @@ class BatchLoader : public IIterator<TBlobBatch> {
       // otherise, we already called before first
       base_->BeforeFirst();
     } else {
+      std::cout << "no doing beforefirst in iter_batch" << std::endl;
       num_overflow_ = 0;
     }
     head_ = 1;

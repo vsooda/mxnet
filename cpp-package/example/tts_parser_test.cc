@@ -12,11 +12,12 @@
 using dmlc::data::TTSParser;
 
 int main(int argc, char *argv[]) {
-  std::string data_scp = "/home/sooda/speech/merlin/egs/world/s1/experiments/nana/duration_model/gen_data/cmp.scp";
-  std::string data_dir = "/home/sooda/speech/merlin/egs/world/s1/experiments/nana/duration_model/gen_data/nn_norm_dur_5/";
+  //std::string data_scp = "/home/sooda/speech/merlin/egs/world/s1/experiments/nana/acoustic_model/gen_data/cmp.scp";
+  std::string data_scp = "/home/sooda/speech/merlin/egs/world/s1/experiments/nana/acoustic_model/gen_data/lab.scp";
+  std::string data_dir = "/home/sooda/speech/merlin/egs/world/s1/experiments/nana/acoustic_model/gen_data/nn_norm_mgc_lf0_vuv_bap_199/";
   std::string data_names = "/home/sooda/speech/merlin/egs/world/s1/experiments/nana/duration_model/gen_data/nn_norm_dur_5/hs_zh_arctic_hmb_10267.cmp;/home/sooda/speech/merlin/egs/world/s1/experiments/nana/duration_model/gen_data/nn_norm_dur_5/hs_zh_arctic_hmb_10268.cmp";
-  int feat_dim = 5;
-  std::unique_ptr<TTSParser> parser(new TTSParser(data_names, feat_dim));
+  int feat_dim = 555;
+  std::unique_ptr<TTSParser> parser(new TTSParser(data_scp, feat_dim));
   parser->BeforeFirst();
   int line = 0;
   while (parser->Next()) {

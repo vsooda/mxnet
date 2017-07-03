@@ -67,3 +67,9 @@ add_dependencies(resnet ${CPPEX_DEPS})
 
 add_executable(rnn_predict rnn_predict.cpp ${CPP_PACKAGE_HEADERS})
 target_link_libraries(rnn_predict ${CPP_EXAMPLE_LIBS})
+
+add_executable(iter_tts_test iter_tts_test.cc)
+target_link_libraries(iter_tts_test mxnet pthread)
+
+add_executable(tts_parser_test tts_parser_test.cc)
+target_link_libraries(tts_parser_test mxnet)

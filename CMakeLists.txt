@@ -378,27 +378,7 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
 endif()
 
-if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin" AND USE_MXNET_LIB_NAMING)
-  add_library(mxnet MODULE ${SOURCE})
-else()
-  if(UNIX)
-    add_library(mxnet_static STATIC ${SOURCE})
-    # Need an arbitrary source file to trigger CMake to build the library
-    add_library(mxnet SHARED)
-    # This has prolems, as it adds libmxnet_static to INTERFACE_LINK_LIBRARIES
-    target_link_libraries(mxnet "-Wl,--whole-archive $<TARGET_FILE:mxnet_static> -Wl,--no-whole-archive")
-    target_link_libraries(mxnet mxnet_static) # Let cmake understand the dependency
-    add_custom_target(
-        StaticallyLinkStaticMXNetLibrary ALL
-        BYPRODUCTS ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/libmxnet.a
-        WORKING_DIRECTORY ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
-        COMMAND ln -sf libmxnet_static.a libmxnet.a
-        DEPENDS mxnet_static
-    )
-  else()
-    add_library(mxnet SHARED ${SOURCE})
-  endif()
-endif()
+add_library(mxnet SHARED ${SOURCE})
 target_link_libraries(mxnet ${mxnet_LINKER_LIBS})
 
 if(USE_PLUGINS_WARPCTC)
