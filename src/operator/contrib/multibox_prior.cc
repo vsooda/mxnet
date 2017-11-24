@@ -42,6 +42,7 @@ inline void MultiBoxPriorForward(const Tensor<cpu, 2, DType> &out,
 
   for (int r = 0; r < in_height; ++r) {
     float center_y = (r + offsets[0]) * step_y;
+    float center_y1 = (r + offsets[0] + 0.5) * step_y;
     for (int c = 0; c < in_width; ++c) {
       float center_x = (c + offsets[1]) * step_x;
       // ratio = 1, various sizes
@@ -54,7 +55,14 @@ inline void MultiBoxPriorForward(const Tensor<cpu, 2, DType> &out,
         out[count][2] = center_x + w;  // xmax
         out[count][3] = center_y + h;  // ymax
         ++count;
+        
+        out[count][0] = center_x - w;  // xmin
+        out[count][1] = center_y1 - h;  // ymin
+        out[count][2] = center_x + w;  // xmax
+        out[count][3] = center_y1 + h;  // ymax
+        ++count;
       }
+
       // various ratios, size = min_size = size[0]
       float size = sizes[0];
       for (int j = 1; j < num_ratios; ++j) {
@@ -65,6 +73,12 @@ inline void MultiBoxPriorForward(const Tensor<cpu, 2, DType> &out,
         out[count][1] = center_y - h;  // ymin
         out[count][2] = center_x + w;  // xmax
         out[count][3] = center_y + h;  // ymax
+        ++count;
+
+        out[count][0] = center_x - w;  // xmin
+        out[count][1] = center_y1 - h;  // ymin
+        out[count][2] = center_x + w;  // xmax
+        out[count][3] = center_y1 + h;  // ymax
         ++count;
       }
     }
