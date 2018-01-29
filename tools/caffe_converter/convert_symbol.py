@@ -70,18 +70,18 @@ def proto2script(proto_file):
     elif len(proto.layers):
         layer = proto.layers
     else:
-        raise Exception('Invalid proto file.')   
+        raise Exception('Invalid proto file.')
     # Get input size to network
     input_dim = [1, 3, 224, 224] # default
     if len(proto.input_dim) > 0:
         input_dim = proto.input_dim
-    elif len(proto.input_shape) > 0: 
+    elif len(proto.input_shape) > 0:
         input_dim = proto.input_shape[0].dim
     elif (layer[0].type == "Input"):
         input_dim = layer[0].input_param.shape._values[0].dim
         layer.pop(0)
     else:
-        raise Exception('Invalid proto file.')   
+        raise Exception('Invalid proto file.')
 
     # We assume the first bottom blob of first layer is the output from data layer
     input_name = layer[0].bottom[0]
@@ -122,6 +122,11 @@ def proto2script(proto_file):
         if layer[i].type == 'ReLU' or layer[i].type == 18:
             type_string = 'mx.symbol.Activation'
             param_string = "act_type='relu'"
+            param = layer[i].relu_param
+            if hasattr(param, 'negative_slope'):
+                if param.negative_slope > 0:
+                    type_string = 'mx.symbol.LeakyReLU'
+                    param_string = "act_type='leaky', slope=%f" % param.negative_slope
             need_flatten[name] = need_flatten[mapping[layer[i].bottom[0]]]
         if layer[i].type == 'TanH' or layer[i].type == 23:
             type_string = 'mx.symbol.Activation'
